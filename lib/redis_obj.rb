@@ -1,3 +1,5 @@
+require 'ostruct'
+
 %w{
   version
   base
@@ -21,21 +23,37 @@ module RedisObj
       end
     end
 
+    def redis_prefix ctx
+      if ctx.is_a?(Hash)
+        ctx = OpenStruct.new(ctx)
+      end
+      ctx.instance_exec(&store_redis_in)
+    end
+
     def redis_obj type, name, opts={}
       opts[:key] ||= name
       opts[:redis] ||= RedisObj.redis
 
+      klass_method = "redis_#{name}"
+      instance_variable = "@#{name}"
+
       define_method name do
-        unless obj = instance_variable_get("@#{name}")
-          redis = opts[:redis]
+        unless obj = instance_variable_get(instance_variable)
+          obj = self.class.send(klass_method,self)
 
-          if redis.respond_to?(:call)
-            redis = redis.call
-          end
-
-          obj = instance_variable_set("@#{name}",type.new(redis,redis_prefix+":#{opts[:key]}"))
+          instance_variable_set(instance_variable,obj)
         end
         obj
+      end
+
+      define_singleton_method klass_method do |context|
+        redis = opts[:redis]
+
+        if redis.respond_to?(:call)
+          redis = redis.call
+        end
+
+        type.new(redis, "#{redis_prefix(context)}:#{opts[:key]}")
       end
     end
 
@@ -62,7 +80,7 @@ module RedisObj
 
   module InstanceMethods
     def redis_prefix
-      instance_exec(self,&self.class.store_redis_in)
+      self.class.redis_prefix(self)
     end
   end
 
