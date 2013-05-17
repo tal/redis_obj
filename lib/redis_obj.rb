@@ -24,7 +24,7 @@ module RedisObj
     end
 
     def redis_prefix ctx
-      if ctx.is_a?(Hash)
+      if ctx.is_a? ::Hash
         ctx = OpenStruct.new(ctx)
       end
       ctx.instance_exec(&store_redis_in)

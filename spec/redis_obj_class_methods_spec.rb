@@ -24,7 +24,7 @@ describe RedisObj do
 
     context "hash" do
       let(:context) {{id: rand(100000)}}
-      before {context.should_receive(:is_a?).and_return(true)}
+      # before {context.should_receive(:is_a?).and_return(true)}
 
       it do
         test_klass.redis_prefix(context).should == "class:#{context[:id]}"
