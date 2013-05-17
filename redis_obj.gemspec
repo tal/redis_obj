@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = RedisObj::VERSION
   spec.authors       = ["Tal Atlas"]
   spec.email         = ["me@tal.by"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
-  spec.homepage      = ""
+  spec.description   = %q{methods for managing redis keys in an object oriented manner}
+  spec.summary       = %q{kinda like a redis ORM}
+  spec.homepage      = "https://github.com/tal/redis_obj"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
