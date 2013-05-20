@@ -31,7 +31,7 @@ module RedisObj
     end
 
     def redis_obj type, name, opts={}
-      opts[:key] ||= name
+      opts[:key] = name unless opts.has_key?(:key)
       opts[:redis] ||= -> { RedisObj.redis }
 
       klass_method = "redis_#{name}"

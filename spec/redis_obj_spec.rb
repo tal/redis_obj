@@ -47,6 +47,21 @@ describe RedisObj do
       its(:redis) { should === redis }
     end
 
+    describe 'redis_hash with no key' do
+      before do
+        test_klass.redis_hash :hash, key: false
+      end
+
+      it {should respond_to :hash}
+      its(:hash) { should be_a(RedisObj::Hash) }
+
+      describe 'hash' do
+        subject { obj.hash }
+
+        its(:key) { should == obj.redis_prefix }
+      end
+    end
+
     describe 'redis_set defined default key' do
       let(:redis) {mock('Redis')}
       before do
