@@ -85,10 +85,7 @@ module RedisObj
   end
 
   class << self
-    attr_writer :redis
-    def redis
-      @redis ||= Redis.new
-    end
+    attr_accessor :redis
   end
 
 

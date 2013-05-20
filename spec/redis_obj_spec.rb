@@ -1,6 +1,9 @@
 require 'spec_helper'
 
 describe RedisObj do
+  let(:base_redis) { mock("BaseRedis") }
+  before { RedisObj.redis = base_redis }
+
   let(:test_klass) do
     Class.new do
       attr_reader :id
@@ -32,6 +35,18 @@ describe RedisObj do
     before { test_klass.store_redis_in { "test:#{id}"} }
     its(:redis_prefix) { should == "test:#{subject.id}" }
 
+    describe "global redis instance" do
+      subject{obj.friends}
+      let(:redis) {mock('Redis')}
+
+      before { RedisObj.redis = redis; test_klass.redis_set :friends }
+      after { RedisObj.redis = base_redis }
+
+      it { RedisObj.redis.should === redis }
+
+      its(:redis) { should === redis }
+    end
+
     describe 'redis_set defined default key' do
       let(:redis) {mock('Redis')}
       before do
@@ -55,7 +70,9 @@ describe RedisObj do
         subject{obj.friends}
 
         its(:key) { should == "test:#{obj.id}:friends" }
-        # its(:redis) { should be base_redis}
+        its(:redis) { should === base_redis}
+
+        it { RedisObj.redis.should === base_redis }
       end
 
       describe 'friends2' do
