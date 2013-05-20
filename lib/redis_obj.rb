@@ -32,7 +32,7 @@ module RedisObj
 
     def redis_obj type, name, opts={}
       opts[:key] ||= name
-      opts[:redis] ||= RedisObj.redis
+      opts[:redis] ||= -> { RedisObj.redis }
 
       klass_method = "redis_#{name}"
       instance_variable = "@#{name}"
