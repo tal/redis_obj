@@ -53,7 +53,11 @@ module RedisObj
           redis = redis.call
         end
 
-        type.new(redis, "#{redis_prefix(context)}:#{opts[:key]}")
+        if opts[:key] == false
+          type.new(redis, "#{redis_prefix(context)}")
+        else
+          type.new(redis, "#{redis_prefix(context)}:#{opts[:key]}")
+        end
       end
     end
 
