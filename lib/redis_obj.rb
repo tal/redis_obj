@@ -78,6 +78,7 @@ module RedisObj
     end
 
     def inherited subklass
+      super
       subklass.instance_variable_set(:@store_redis_in,@store_redis_in)
     end
   end
