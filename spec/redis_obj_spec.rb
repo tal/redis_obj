@@ -7,7 +7,7 @@ describe RedisObj do
   let(:test_klass) do
     Class.new do
       attr_reader :id
-      include RedisObj
+      include RedisObj::Relations
 
       def initialize
         @id = rand(100000)
