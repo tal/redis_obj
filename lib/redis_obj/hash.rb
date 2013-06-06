@@ -5,9 +5,9 @@ class RedisObj::Hash < RedisObj::Base
 
   def incby field, amt
     if amt.is_a?(Float)
-      redis.hincbyfloat(key,field,amt)
+      redis.hincrbyfloat(key,field,amt)
     else
-      redis.hincby(key,field,amt)
+      redis.hincrby(key,field,amt)
     end
   end
   alias incbyfloat incby
