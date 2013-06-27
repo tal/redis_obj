@@ -1,42 +1,49 @@
 class RedisObj::Set < RedisObj::Base
   include Enumerable
 
-  def members
+  def smembers
     redis.smembers(key)
   end
-  alias to_a members
+  alias to_a smembers
 
-  def ismember val
+  def each &blk
+    to_a.each(&blk)
+  end
+
+  def sismember val
     redis.sismember(key,val)
   end
-  alias include? ismember
+  alias include? sismember
 
-  def inter *keys
+  def sinter *keys
     redis.sinter(key,*get_keys(keys))
   end
-  alias & inter
+  alias & sinter
+  alias intersection sinter
 
-  def interstore destination, *keys, &blk
+  def sinterstore destination, *keys, &blk
     redis.sinterstore(destination,key,*get_keys(keys))
     store_block_syntax(destination,&blk)
   end
 
-  def diff *keys
+  def sdiff *keys
     redis.sdiff(key,*get_keys(keys))
   end
-  alias - diff
+  alias - sdiff
+  alias difference sdiff
 
-  def diffstore destination, *keys, &blk
+  def sdiffstore destination, *keys, &blk
     redis.sdiffstore(destination,key,*get_keys(keys))
     store_block_syntax(destination,&blk)
   end
 
-  def union *keys
+  def sunion *keys
     redis.sunion(key,*get_keys(keys))
   end
-  alias | union
+  alias | sunion
+  alias + sunion
 
-  def unionstore destination, *keys, &blk
+  def sunionstore destination, *keys, &blk
     redis.sunionstore(destination,key,*get_keys(keys))
     store_block_syntax(destination,&blk)
   end
@@ -47,25 +54,65 @@ class RedisObj::Set < RedisObj::Base
 
   def add val
     redis.sadd(key,val)
+    self
   end
   alias << add
 
-  def rem val
-    redis.srem(key,val)
+  def add? val
+    redis.sadd(key,val) ? self : nil
+  end
+
+  def remove(val)
+    srem(val)
+    self
+  end
+
+  def remove?(val)
+    srem(val) ? self : nil
   end
 
   def srandmember num=1
     redis.srandmember(key,num)
   end
+  alias sample srandmember
 
-  def card
+  def scard
     redis.scard(key)
   end
-  alias length card
-  alias size card
-  alias count card
+  alias length scard
+  alias size scard
+  alias count scard
 
-  def each &blk
-    to_a.each(&blk)
+  def empty?
+    scard == 0
+  end
+
+  def delete_if(&blk)
+    vals_to_delete = select(&blk)
+    redis.srem(key,vals_to_delete)
+    vals_to_delete
+  end
+
+  # Allow for non prefixed versions of the commands to be sent
+  # as well as making future proof for new versions of redis
+  def method_missing method, *arguments, &blk
+    if redis.respond_to?(method)
+      # If its a method available to redis just pass it along with the key
+      # as the first argument
+      redis.__send__(method,key,*arguments,&blk)
+    else
+      # If redis responds to the method prefixed with an h pass it along
+      if method.to_s[0] != 's' && (new_method = "s#{method}") && redis.respond_to?(new_method)
+        self.send(new_method,*arguments,&blk)
+      else
+        super
+      end
+    end
+  end
+
+  def respond_to_missing?(method, include_private = false)
+    return true if redis.respond_to?(method)
+    method = method.to_s
+    method[0] != 's' && redis.respond_to?("s#{method}") or super
   end
 end

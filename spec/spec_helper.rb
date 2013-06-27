@@ -20,3 +20,46 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__),'..','lib')))
 
 require 'redis'
 require 'redis_obj'
+
+
+shared_examples "a method missing object" do |has_pefix=false|
+  describe 'method missing' do
+    let(:non_redis_method) { :"rand_method_#{rand}" }
+
+    it 'should respond to redis methods' do
+      subject.respond_to?(redis_method).should be true
+    end
+
+    it 'should pass method along' do
+      expect(redis).to receive(redis_method).with(key)
+      subject.__send__(redis_method)
+    end
+
+    it 'should not respond to non redis methods' do
+      subject.respond_to?(non_redis_method).should be false
+    end
+
+    it 'should error if you call non redis method' do
+      redis.should_not_receive(:non_redis_method)
+      expect { subject.send(non_redis_method) }.to raise_error(NoMethodError)
+    end
+
+    if has_pefix
+      let(:prefixed_redis_method) { :"#{has_pefix}prefixed_redis_method" }
+      before do
+        allow(redis).to receive(prefixed_redis_method)
+      end
+
+      it { subject.respond_to?(prefixed_redis_method).should be true }
+      it 'should pass method along' do
+        expect(redis).to receive(prefixed_redis_method).with(key)
+        subject.__send__(prefixed_redis_method)
+      end
+      it { subject.respond_to?(:prefixed_redis_method).should be true }
+      it 'should pass method along' do
+        expect(redis).to receive(:prefixed_redis_method).with(key)
+        subject.__send__(:prefixed_redis_method)
+      end
+    end
+  end
+end

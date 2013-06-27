@@ -1,9 +1,11 @@
 require 'ostruct'
+require 'forwardable'
 
 %w{
   version
   base
   set
+  list
   sorted_set
   hash
   relations

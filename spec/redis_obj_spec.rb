@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe RedisObj do
-  let(:base_redis) { mock("BaseRedis") }
+  let(:base_redis) { double("BaseRedis") }
   before { RedisObj.redis = base_redis }
 
   let(:test_klass) do
@@ -37,7 +37,7 @@ describe RedisObj do
 
     describe "global redis instance" do
       subject{obj.friends}
-      let(:redis) {mock('Redis')}
+      let(:redis) {double('Redis')}
 
       before { RedisObj.redis = redis; test_klass.redis_set :friends }
       after { RedisObj.redis = base_redis }
@@ -63,7 +63,7 @@ describe RedisObj do
     end
 
     describe 'redis_set defined default key' do
-      let(:redis) {mock('Redis')}
+      let(:redis) {double('Redis')}
       before do
         test_klass.redis_set :friends
         test_klass.redis_set :friends2, key: 'f', redis: redis

@@ -1,58 +1,39 @@
 class RedisObj::List < RedisObj::Base
   include Enumerable
 
-  def blpop *args
-    redis.blpop(key,*args)
+  def first num=1
+    lrange(0,num-1)
   end
 
-  def brpop *args
-    redis.brpop(key,*args)
+  def take n
+    first(n)
   end
 
-  def brpoplpush(destination, options = {})
-    redis.brpoplpush(key,destination,options)
-  end
-
-  def lindex(index)
-    redis.lindex(key,index)
-  end
-  alias [] lindex
-
-  def linsert(where, pivot, value)
-    redis.linsert(key,where,pivot,value)
-  end
-
-  def lrange(start, stop)
-    redis.lrange(key, start, stop)
+  def last num=1
+    lrange(-1*num,-1)
   end
 
   def to_a
     lrange(0,-1)
   end
 
-  def each &blk
-    to_a.each(&blk)
+  def lindex(index)
+    redis.lindex(key,index)
   end
-
-  def lrem(count, value)
-    redis.lrem(key, count, value)
-  end
+  alias [] lindex
+  alias at lindex
 
   def lset(index, value)
     redis.lset(key, index, value)
   end
   alias []= lset
 
-  def ltrim(start, stop)
-    redis.ltrim(key, start, stop)
-  end
-
-  def len
+  def llen
     redis.llen(key)
   end
-  alias length len
-  alias size len
-  alias count len
+  alias length llen
+  alias size llen
+  alias count llen
 
   def lpop
     redis.lpop(key)
@@ -60,22 +41,14 @@ class RedisObj::List < RedisObj::Base
   alias shift lpop
 
   def lpush val
-    redis.lpush(val)
+    redis.lpush(key,val)
   end
   alias unshift lpush
-
-  def lpushx val
-    redis.lpushx(key,val)
-  end
 
   def rpop
     redis.rpop(key)
   end
   alias pop rpop
-
-  def rpoplpush destination
-    redis.rpoplpush(key, destination)
-  end
 
   def rpush val
     redis.rpush(key,val)
@@ -83,7 +56,50 @@ class RedisObj::List < RedisObj::Base
   alias << rpush
   alias push rpush
 
-  def rpushx val
-    redis.rpushx(key,val)
+  def include?(val)
+    warn('Calling include on redis list, must pull down entire list to process')
+    !!find {|v| v == val}
+  end
+
+  def drop n
+    redis.ltrim(key,n,-1)
+    self
+  end
+
+  def sample n=1
+    cnt = llen
+    if n==1
+      lindex(rand(cnt))
+    else
+      arr = []
+      n.times do
+        arr << lindex(rand(cnt))
+      end
+      arr
+    end
+  end
+
+  # Make future proof for new versions of redis
+  def method_missing method, *arguments, &blk
+    if redis.respond_to?(method)
+      # If its a method available to redis just pass it along with the key
+      # as the first argument
+      redis.__send__(method,key,*arguments,&blk)
+    else
+      super
+    end
+  end
+
+  def respond_to_missing?(method, include_private = false)
+    redis.respond_to?(method) || super
+  end
+
+  def_delegators :_delegated_to_a, :pack, :join, :each, :uniq
+
+  private
+
+  def _delegated_to_a
+    warn('Calling include on redis list, must pull down entire list to process')
+    to_a
   end
 end
