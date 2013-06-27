@@ -1,5 +1,7 @@
 # RedisObj
 
+[![Build Status](https://travis-ci.org/tal/redis_obj.png)](https://travis-ci.org/tal/redis_obj)
+
 This gem allows you to treat redis stores like ruby objects.
 
     RedisObj::Set.new('myset').include?('foo')
