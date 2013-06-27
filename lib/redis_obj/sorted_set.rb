@@ -1,14 +1,11 @@
 class RedisObj::SortedSet < RedisObj::Base
-  def add score, member
-    redis.zadd(key,score,member)
-  end
-
-  def rem member
-    redis.zrem(key,mem)
-  end
-
-  def card min=0,max=0
+  def card min=nil,max=nil
     if min
+      if min.respond_to?(:max) && min.respond_to?(:min)
+        max = min.max
+        min = min.min
+      end
+
       redis.zcount(key,min,max)
     else
       redis.zcard(key)
@@ -16,53 +13,42 @@ class RedisObj::SortedSet < RedisObj::Base
   end
   alias length card
   alias size card
-  alias count card
+  alias zcount card
 
-  def incby amt, member
+  def zincrby amt, member
     redis.zincby(key,amt,member)
   end
+  alias incby zincrby
 
   def inc member
-    incby(1,member)
+    incrby(1,member)
   end
+  alias incr inc
 
   def dec member
-    incby(-1,member)
+    incrby(-1,member)
   end
+  alias decr dec
 
-  def range start, stop, opts={}
-    redis.zrange(key,start,stop,opts)
-  end
+  def zremrangebyrank start, stop=nil
+    if start.respond_to?(:max) && start.respond_to?(:min)
+      stop = start.max
+      start = start.min
+    end
 
-  def revrange start, stop, opts={}
-    redis.zrevrange(key,start,stop,opts)
-  end
-
-  def rangebyscore start, stop, opts={}
-    redis.zrangebyscore(key,start,stop,opts)
-  end
-
-  def revrangebyscore start, stop, opts={}
-    redis.zrevrangebyscore(key,start,stop,opts)
-  end
-
-  def rank mem
-    redis.rank(key,mem)
-  end
-
-  def revrank mem
-    redis.revrank(key,mem)
-  end
-
-  def remrangebyrank start, stop
     redis.zremrangebyrank(key,start,stop)
   end
 
-  def remrangebyscore start, stop
+  def zremrangebyscore start, stop=nil
+    if start.respond_to?(:max) && start.respond_to?(:min)
+      stop = start.max
+      start = start.min
+    end
+
     redis.zremrangebyscore(key,start,stop)
   end
 
-  def interstore(destination, keys, options = {}, &blk)
+  def zinterstore(destination, keys, options = {}, &blk)
     keys = [key]+keys
 
     redis.zinterstore(destination,keys,options)
@@ -70,7 +56,7 @@ class RedisObj::SortedSet < RedisObj::Base
     store_block_syntax(destination,&blk)
   end
 
-  def unionstore(destination, keys, options = {}, &blk)
+  def zunionstore(destination, keys, options = {}, &blk)
     keys = [key]+keys
 
     redis.zunionstore(destination,keys,options)
@@ -78,4 +64,26 @@ class RedisObj::SortedSet < RedisObj::Base
     store_block_syntax(destination,&blk)
   end
 
+  # Allow for non prefixed versions of the commands to be sent
+  # as well as making future proof for new versions of redis
+  def method_missing method, *arguments, &blk
+    if redis.respond_to?(method)
+      # If its a method available to redis just pass it along with the key
+      # as the first argument
+      redis.__send__(method,key,*arguments,&blk)
+    else
+      # If redis responds to the method prefixed with an h pass it along
+      if method.to_s[0] != 'z' && (new_method = "z#{method}") && redis.respond_to?(new_method)
+        self.send(new_method,*arguments,&blk)
+      else
+        super
+      end
+    end
+  end
+
+  def respond_to_missing?(method, include_private = false)
+    return true if redis.respond_to?(method)
+    method = method.to_s
+    method[0] != 'z' && redis.respond_to?("z#{method}") or super
+  end
 end

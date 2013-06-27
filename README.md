@@ -1,12 +1,14 @@
 # RedisObj
 
-This gem allows you to treat redis stores like objects.
+This gem allows you to treat redis stores like ruby objects.
 
     RedisObj::Set.new('myset').include?('foo')
 
 Will run the redis command
 
     sismember myset foo
+
+So a hash key would act like a ruby hash, a set a set, and a list an array.
 
 ## Installation
 
