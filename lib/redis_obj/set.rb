@@ -16,19 +16,9 @@ class RedisObj::Set < RedisObj::Base
   end
   alias & inter
 
-  def interstore destination, *keys
+  def interstore destination, *keys, &blk
     redis.sinterstore(destination,key,*get_keys(keys))
-    new_key = self.class.new(redis,destination)
-
-    if block_given?
-      begin
-        yield(new_key)
-      ensure
-        redis.del(destination)
-      end
-    end
-
-    new_key
+    store_block_syntax(destination,&blk)
   end
 
   def diff *keys
@@ -36,19 +26,9 @@ class RedisObj::Set < RedisObj::Base
   end
   alias - diff
 
-  def diffstore destination, *keys
+  def diffstore destination, *keys, &blk
     redis.sdiffstore(destination,key,*get_keys(keys))
-    new_key = self.class.new(redis,destination)
-
-    if block_given?
-      begin
-        yield(new_key)
-      ensure
-        redis.del(destination)
-      end
-    end
-
-    new_key
+    store_block_syntax(destination,&blk)
   end
 
   def union *keys
@@ -56,19 +36,9 @@ class RedisObj::Set < RedisObj::Base
   end
   alias | union
 
-  def unionstore destination, *keys
+  def unionstore destination, *keys, &blk
     redis.sunionstore(destination,key,*get_keys(keys))
-    new_key = self.class.new(redis,destination)
-
-    if block_given?
-      begin
-        yield(new_key)
-      ensure
-        redis.del(destination)
-      end
-    end
-
-    new_key
+    store_block_syntax(destination,&blk)
   end
 
   def pop

@@ -62,40 +62,20 @@ class RedisObj::SortedSet < RedisObj::Base
     redis.zremrangebyscore(key,start,stop)
   end
 
-  def interstore(destination, keys, options = {})
+  def interstore(destination, keys, options = {}, &blk)
     keys = [key]+keys
 
     redis.zinterstore(destination,keys,options)
 
-    new_key = self.class.new(redis,destination)
-
-    if block_given?
-      begin
-        yield(new_key)
-      ensure
-        redis.del(destination)
-      end
-    end
-
-    new_key
+    store_block_syntax(destination,&blk)
   end
 
-  def unionstore(destination, keys, options = {})
+  def unionstore(destination, keys, options = {}, &blk)
     keys = [key]+keys
 
     redis.zunionstore(destination,keys,options)
 
-    new_key = self.class.new(redis,destination)
-
-    if block_given?
-      begin
-        yield(new_key)
-      ensure
-        redis.del(destination)
-      end
-    end
-
-    new_key
+    store_block_syntax(destination,&blk)
   end
 
 end

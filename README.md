@@ -1,6 +1,12 @@
 # RedisObj
 
-TODO: Write a gem description
+This gem allows you to treat redis stores like objects.
+
+    RedisObj::Set.new('myset').include?('foo')
+
+Will run the redis command
+
+    sismember myset foo
 
 ## Installation
 
@@ -18,7 +24,28 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+All the RedisObj wrappers have common ruby functions implemented
+
+    RedisObj::Set.new('set1').to_a
+    # => smembers set1
+
+    RedisObj::Set.new('set1') & RedisObj::Set.new('set2')
+    #=> sinter set1 set2
+
+    RedisObj::Set.new('set1') - RedisObj::Set.new('set2')
+    # => sdiff set1 set2
+
+You can also just call the methods staright out
+
+    RedisObj::Hash.new('hash1').mget('key','key2')
+    # => hmget hash1 key key2
+
+There are too many methods to list but check out the source to see all the ones listed:
+
+* [Hash](https://github.com/tal/redis_obj/blob/master/lib/redis_obj/hash.rb)
+* [List](https://github.com/tal/redis_obj/blob/master/lib/redis_obj/list.rb)
+* [Set](https://github.com/tal/redis_obj/blob/master/lib/redis_obj/set.rb)
+* [SortedSet](https://github.com/tal/redis_obj/blob/master/lib/redis_obj/sorted_set.rb)
 
 ## Contributing
 

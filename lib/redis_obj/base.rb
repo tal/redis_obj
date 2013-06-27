@@ -19,6 +19,20 @@ class RedisObj::Base
 
   private
 
+  def store_block_syntax(destination)
+    new_key = self.class.new(redis,destination)
+
+    if block_given?
+      begin
+        yield(new_key)
+      ensure
+        redis.del(destination)
+      end
+    else
+      new_key
+    end
+  end
+
   def get_keys(keys)
     if keys.first.respond_to?(:key)
       keys.collect(&:key)

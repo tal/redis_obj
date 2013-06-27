@@ -12,10 +12,12 @@ class RedisObj::Hash < RedisObj::Base
   end
   alias incbyfloat incby
 
+  # Increment by one
   def inc field
     incby(field,1)
   end
 
+  # Decriment by one
   def dec field
     incby(field,-1)
   end
