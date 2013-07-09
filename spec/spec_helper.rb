@@ -16,7 +16,7 @@ RSpec.configure do |config|
   config.order = 'random'
 end
 
-$:.unshift(File.expand_path(File.join(File.dirname(__FILE__),'..','lib')))
+# $:.unshift(File.expand_path(File.join(File.dirname(__FILE__),'..','lib')))
 
 require 'redis'
 require 'redis_obj'

@@ -49,19 +49,11 @@ class RedisObj::SortedSet < RedisObj::Base
   end
 
   def zinterstore(destination, keys, options = {}, &blk)
-    keys = [key]+keys
-
-    redis.zinterstore(destination,keys,options)
-
-    store_block_syntax(destination,&blk)
+    store_block_syntax(:zinterstore,destination,keys,options,&blk)
   end
 
   def zunionstore(destination, keys, options = {}, &blk)
-    keys = [key]+keys
-
-    redis.zunionstore(destination,keys,options)
-
-    store_block_syntax(destination,&blk)
+    store_block_syntax(:zunionstore,destination,keys,options,&blk)
   end
 
   # Allow for non prefixed versions of the commands to be sent
@@ -85,5 +77,31 @@ class RedisObj::SortedSet < RedisObj::Base
     return true if redis.respond_to?(method)
     method = method.to_s
     method[0] != 'z' && redis.respond_to?("z#{method}") or super
+  end
+
+  private
+
+  # If a block is passed yeild up the new key object and
+  # then delete the key afterwards
+  def store_block_syntax(command, destination, keys, options,&blk)
+    if block_given?
+      keys.unshift destination
+      destination = SecureRandom.uuid
+    end
+
+    keys.unshift(key)
+    redis.__send__(command,destination,get_keys(keys),options)
+
+    new_key = self.class.new(redis,destination)
+
+    if block_given?
+      begin
+        yield(new_key)
+      ensure
+        redis.del(destination)
+      end
+    else
+      new_key
+    end
   end
 end

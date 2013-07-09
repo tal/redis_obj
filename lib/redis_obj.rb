@@ -1,5 +1,6 @@
 require 'ostruct'
 require 'forwardable'
+require 'securerandom'
 
 %w{
   version

@@ -100,7 +100,9 @@ describe RedisObj::Set do
       it 'should delete key after when returning block' do
         expect(redis).to receive(:del).with(destination).once
         expect(redis).to receive(redis_method).with(destination).once
-        subject.sinterstore destination, *keys do |new_key|
+        expect(SecureRandom).to receive(:uuid).once.and_return(destination)
+
+        subject.sinterstore *keys do |new_key|
           new_key.send redis_method
         end
       end
@@ -118,7 +120,9 @@ describe RedisObj::Set do
       it 'should delete key after when returning block' do
         expect(redis).to receive(:del).with(destination).once
         expect(redis).to receive(redis_method).with(destination).once
-        subject.sdiffstore destination, *keys do |new_key|
+        expect(SecureRandom).to receive(:uuid).once.and_return(destination)
+
+        subject.sdiffstore *keys do |new_key|
           new_key.send redis_method
         end
       end
@@ -136,7 +140,9 @@ describe RedisObj::Set do
       it 'should delete key after when returning block' do
         expect(redis).to receive(:del).with(destination).once
         expect(redis).to receive(redis_method).with(destination).once
-        subject.sunionstore destination, *keys do |new_key|
+        expect(SecureRandom).to receive(:uuid).once.and_return(destination)
+
+        subject.sunionstore *keys do |new_key|
           new_key.send redis_method
         end
       end

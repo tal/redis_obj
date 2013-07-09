@@ -22,24 +22,6 @@ class RedisObj::Base
     redis.del(key)
   end
 
-  private
-
-  # If a block is passed yeild up the new key object and
-  # then delete the key afterwards
-  def store_block_syntax(destination)
-    new_key = self.class.new(redis,destination)
-
-    if block_given?
-      begin
-        yield(new_key)
-      ensure
-        redis.del(destination)
-      end
-    else
-      new_key
-    end
-  end
-
   def get_keys(keys)
     keys = keys.flatten
     if keys.first.respond_to?(:key)

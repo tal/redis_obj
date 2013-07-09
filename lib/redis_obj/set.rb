@@ -22,8 +22,7 @@ class RedisObj::Set < RedisObj::Base
   alias intersection sinter
 
   def sinterstore destination, *keys, &blk
-    redis.sinterstore(destination,key,*get_keys(keys))
-    store_block_syntax(destination,&blk)
+    store_block_syntax(:sinterstore,destination,keys,&blk)
   end
 
   def sdiff *keys
@@ -33,8 +32,7 @@ class RedisObj::Set < RedisObj::Base
   alias difference sdiff
 
   def sdiffstore destination, *keys, &blk
-    redis.sdiffstore(destination,key,*get_keys(keys))
-    store_block_syntax(destination,&blk)
+    store_block_syntax(:sdiffstore,destination,keys,&blk)
   end
 
   def sunion *keys
@@ -44,8 +42,7 @@ class RedisObj::Set < RedisObj::Base
   alias + sunion
 
   def sunionstore destination, *keys, &blk
-    redis.sunionstore(destination,key,*get_keys(keys))
-    store_block_syntax(destination,&blk)
+    store_block_syntax(:sunionstore,destination,keys,&blk)
   end
 
   def pop
@@ -114,5 +111,31 @@ class RedisObj::Set < RedisObj::Base
     return true if redis.respond_to?(method)
     method = method.to_s
     method[0] != 's' && redis.respond_to?("s#{method}") or super
+  end
+
+  private
+
+  # If a block is passed yeild up the new key object and
+  # then delete the key afterwards
+  def store_block_syntax(command, destination, keys, &blk)
+    if block_given?
+      keys.unshift destination
+      destination = SecureRandom.uuid
+    end
+
+    keys.unshift(key)
+    redis.__send__(command,destination,*get_keys(keys))
+
+    new_key = self.class.new(redis,destination)
+
+    if block_given?
+      begin
+        yield(new_key)
+      ensure
+        redis.del(destination)
+      end
+    else
+      new_key
+    end
   end
 end
