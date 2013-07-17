@@ -2,3 +2,4 @@
 * Add range support to `List#[]`
 * Optionally cache values when you pull down entire set
 * In storage methods generate a random destination key if not given
+* Allow sets and lists to interact with arrays directly for comparison actions
